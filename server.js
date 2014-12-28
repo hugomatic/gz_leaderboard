@@ -8,7 +8,7 @@ var bodyParser = require('body-parser');
 var credentials = {key: privateKey, cert: certificate};
 var express = require('express');
 var util = require('util');
-
+var serveStatic = require('serve-static');
 
 var config = require('./config.json')
 
@@ -22,11 +22,9 @@ app.use(passport.initialize());
 // parse application/json
 app.use(bodyParser.json())
 
-var users = config.users;
-// [   { id: 1, username: 'myuser', password: 'mypass', email: 'bob@example.com' }
-//  , { id: 2, username: 'joe', password: 'bloe', email: 'joe@example.com' }];
 
 function findByUsername(username, fn) {
+  var users = config.users;
   for (var i = 0, len = users.length; i < len; i++) {
     var user = users[i];
     if (user.username === username) {
@@ -78,7 +76,9 @@ app.get('/',
   // passport.authenticate('basic', { session: false }),
   function(req, res){
     //res.jsonp({ username: req.user.username, email: req.user.email });
+
     console.log('serving all events');
+
 //     res.jsonp(all_events); 
       
     res.write('<html>');
@@ -97,6 +97,16 @@ app.get('/',
     res.end('</html>');
   });
 
+app.get('/api/db', function (req, res) {
+   console.log('GET db');
+ 
+   var db = config;
+   res.jsonp(db);
+
+});
+
+
+
 app.post('/events/new', 
   passport.authenticate('basic', { session: false }),
   function(req, res){
@@ -105,7 +115,7 @@ app.post('/events/new',
    res.jsonp({ username: req.user.username, email: req.user.email, Event: req.body });
   });
 
-app.use(express.static(__dirname));
+app.use(serveStatic(__dirname ));
 
 console.log('Listening on port 3000');
 //httpServer.listen(80);
