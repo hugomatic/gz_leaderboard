@@ -71,31 +71,36 @@ app.get('/login',
   });
 
 
-app.get('/',
-  // Authenticate using HTTP Basic credentials, with session support disabled.
-  // passport.authenticate('basic', { session: false }),
-  function(req, res){
-    //res.jsonp({ username: req.user.username, email: req.user.email });
+app.post('/register', function(req, res)
+{
+  var data = util.inspect(req);
+  console.log("Register " + data);
+  console.log("find bbbbb " + data.search('bbbbb') );
+  
+//  User.getByName(data.name, function(err, user){
+//    if (err) return next(err);
 
-    console.log('serving all events');
+//    if (user.id) {
+//      res.error("Username already taken!");
+//      res.redirect('back');
+//    } else {
 
-//     res.jsonp(all_events); 
-      
-    res.write('<html>');
-    // res.write("<meta http-equiv=\"refresh\" content=\"2\" >");  // refresh the page every sec
+//      user = new User({
+//        name: data.name,
+//        pass: data.pass
+//      });
 
-    res.write('<script>\n');
-    res.write('events = ' + JSON.stringify(all_events) + ';\n' );
-    res.write('</script>\n');
- 
-    res.write('<script src="script.js"></script>\n');
+//      user.save(function(err){
+//        if (err) return next(err);
+//        req.session.uid = user.id;
+//        res.redirect('/');
+//      });
+//    }
+//  });
 
-    res.write('<body onload="fillEventList()">');
-    res.write(' <h1>' + all_events.length + ' events</h1>');
-    res.write(' <div id="list"/>'); 
-    res.write('</body>');
-    res.end('</html>');
-  });
+});
+
+//   console.log("POST /register " + util.inspect(req.body) );
 
 app.get('/api/db', function (req, res) {
    console.log('GET db');
@@ -105,7 +110,10 @@ app.get('/api/db', function (req, res) {
 
 });
 
+app.get('/api/register', function (req, res) {
+   console.log('register ' + util.inspect(req.query)  );
 
+});
 
 app.post('/events/new', 
   passport.authenticate('basic', { session: false }),

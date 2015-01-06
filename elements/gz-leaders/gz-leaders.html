@@ -1,0 +1,76 @@
+
+<!--
+
+    <core-ajax auto handleAs="json" url="{{url}}" response="{{categories}}"></core-ajax>
+
+    <core-ajax
+      auto
+      url="/api/db"
+      params='{"alt":"json", "q":"chrome"}'
+      handleAs="json"
+      on-core-response="{{handleResponse}}"></core-ajax>
+
+
+
+-->
+
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/core-ajax/core-ajax.html">
+
+<polymer-element name="gz-leaders" attributes="">
+  <template>
+    <core-ajax auto handleAs="json" url="/api/db" response="{{dbData}}" ></core-ajax>
+
+    <link rel="stylesheet" href="gz-leaders.css">
+    <h1>Leader board</h1>
+    <ul>
+      <template id="greeting" repeat="{{ leader in leaders }}">
+        <li>{{ leader.user }} {{ leader.points }} points</li>
+      </template>
+    </ul>
+  </template>
+  <script>
+    (function () {
+      console.log("gz-leaders init");
+      Polymer({
+
+        publish: {
+          dbData: null,
+          url: ''
+        },
+
+        loaded: function() {console.log("loaded");},
+
+        ready: function() {
+          this.leaders = [
+            {"user": "Bob", "points": 5},
+            {"user": "Alice", "points": 7},
+            {"user": "Mallory", "points": 2}
+          ];
+         console.log("gz-leaders ready");
+	 console.log("  db:" + this.dbData);
+        }
+      });
+
+    })();
+
+    var handleResponse = function(data) {
+        console.log("handleResponse");
+        console.log("data: " + data);
+    }
+
+    document.addEventListener('polymer-ready', function() {
+      var ajax = document.querySelector("core-ajax");
+      ajax.addEventListener("core-response",
+        function(e) {
+          console.log("XXXXX :-)");
+          document.querySelector('template').model = {
+            response: e.detail.response
+          };
+        }
+      );
+    });
+
+
+  </script>
+</polymer-element>
