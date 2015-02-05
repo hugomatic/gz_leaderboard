@@ -1,16 +1,18 @@
-var fs = require('fs');
-var https = require('https');
-var privateKey  = fs.readFileSync('key.pem', 'utf8');
-var certificate = fs.readFileSync('key-cert.pem', 'utf8');
-var passport = require('passport');
+var fs = require('fs')
+var https = require('https')
+var privateKey  = fs.readFileSync('key.pem', 'utf8')
+var certificate = fs.readFileSync('key-cert.pem', 'utf8')
+var passport = require('passport')
 var BasicStrategy = require('passport-http').BasicStrategy;
-var bodyParser = require('body-parser');
+var bodyParser = require('body-parser')
 var credentials = {key: privateKey, cert: certificate};
-var express = require('express');
-var util = require('util');
-var serveStatic = require('serve-static');
-
+var express = require('express')
+var util = require('util')
+var serveStatic = require('serve-static')
 var config = require('./config.json')
+
+// custom models
+var User = require('./app/models/users');
 
 var app = express();
 
@@ -71,39 +73,52 @@ app.get('/login',
   });
 
 
+
 app.post('/register', function(req, res)
 {
-  var data = util.inspect(req);
-  console.log("Register " + data);
-  console.log("find bbbbb " + data.search('bbbbb') );
-  
-//  User.getByName(data.name, function(err, user){
-//    if (err) return next(err);
+    var data = util.inspect(req.body);
+    console.log("Register " + data);
+    var username = req.body['user']
+    console.log(username)
+    User.getByName(username, function(err, user){  
 
-//    if (user.id) {
-//      res.error("Username already taken!");
-//      res.redirect('back');
-//    } else {
+        if (err)
+        {
+            res.jsonp({"success": false, "error": err});
+        }     
+        if(user)
+        {
+            var e = "User \"" + username  + "\" already exists";
+            console.log(e);
+            res.jsonp({ "success": false, "error": e});
+        }
+        else // the user does not exist
+        {
+            User.add( user, req.body.password, function(err, user){
+                if(err) return next(err);
+                res.jsonp({"success": true, "user":user }); 
+            });
+        }
+   });
+});
 
-//      user = new User({
-//        name: data.name,
-//        pass: data.pass
-//      });
+app.post('/unregister', function(req, res) {
+    var data = util.inspect(req.body);
+    console.log("unregister " + data);
 
-//      user.save(function(err){
-//        if (err) return next(err);
-//        req.session.uid = user.id;
-//        res.redirect('/');
-//      });
-//    }
-//  });
+    var s = {};
+    s["user"] = data.user;
+//    s["password"] = data.password;
+    s["success"] = true;
+    res.jsonp(s);
+
 
 });
 
 //   console.log("POST /register " + util.inspect(req.body) );
 
 app.get('/api/db', function (req, res) {
-   console.log('GET db');
+   console.log('GET /api/db');
  
    var db = config;
    res.jsonp(db);
