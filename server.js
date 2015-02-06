@@ -79,7 +79,6 @@ app.post('/register', function(req, res)
     var data = util.inspect(req.body);
     console.log("Register " + data);
     var username = req.body['user']
-    console.log(username)
     User.getByName(username, function(err, user){  
 
         if (err)
