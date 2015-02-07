@@ -1,5 +1,6 @@
 var db = require('../../config.json')
 var util = require('util')
+var redis = require("redis").createClient(); 
 
 var exports = module.exports = {};
 
@@ -18,11 +19,18 @@ exports.getByName = function(username, cb) {
 //    cb(null, user);
 
 
-// user not found
+    console.log('user ' + username  + ' not found');
     cb(null);
 }
 
 exports.add = function (username, password, cb) {
-   console.log('addUser')
-   cb(null, {});    
+    console.log('add user ' + username)
+    cb(null, {});    
 }
+
+exports.remove = function (username, password, cb) {
+    console.log('remove user ' + username)
+    cb(null, {});
+}
+
+

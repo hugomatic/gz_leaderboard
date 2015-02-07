@@ -12,7 +12,7 @@ var serveStatic = require('serve-static')
 var config = require('./config.json')
 
 // custom models
-var User = require('./app/models/users');
+var User = require('./app/user/routes');
 
 var app = express();
 
@@ -40,6 +40,9 @@ function findByUsername(username, fn) {
 //   Strategies in Passport require a `verify` function, which accept
 //   credentials (in this case, a username and password), and invoke a callback
 //   with a user object.
+passport.use(new BasicStrategy({}, User.verify ));
+
+/*
 passport.use(new BasicStrategy({
   },
   function(username, password, done) {
@@ -58,6 +61,7 @@ passport.use(new BasicStrategy({
     });
   }
 ));
+*/
 
 all_events = [];
 
@@ -73,48 +77,9 @@ app.get('/login',
   });
 
 
+app.post('/register', User.register)
+app.post('/unregister', User.unregister) 
 
-app.post('/register', function(req, res)
-{
-    var data = util.inspect(req.body);
-    console.log("Register " + data);
-    var username = req.body['user']
-    User.getByName(username, function(err, user){  
-
-        if (err)
-        {
-            res.jsonp({"success": false, "error": err});
-        }     
-        if(user)
-        {
-            var e = "User \"" + username  + "\" already exists";
-            console.log(e);
-            res.jsonp({ "success": false, "error": e});
-        }
-        else // the user does not exist
-        {
-            User.add( user, req.body.password, function(err, user){
-                if(err) return next(err);
-                res.jsonp({"success": true, "user":user }); 
-            });
-        }
-   });
-});
-
-app.post('/unregister', function(req, res) {
-    var data = util.inspect(req.body);
-    console.log("unregister " + data);
-
-    var s = {};
-    s["user"] = data.user;
-//    s["password"] = data.password;
-    s["success"] = true;
-    res.jsonp(s);
-
-
-});
-
-//   console.log("POST /register " + util.inspect(req.body) );
 
 app.get('/api/db', function (req, res) {
    console.log('GET /api/db');
