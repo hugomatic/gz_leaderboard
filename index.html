@@ -23,38 +23,49 @@
   <link rel="import" href="elements/elements.html">
   <!-- endbuild-->
 
-<!--
+  <!--   -->
+  <link rel="import" href="bower_components/paper-tabs/paper-tabs.html" >          
 
-  <link rel="import" href="bower_components/core-ajax/core-ajax.html" >          
 
--->
 
+  <script>
+
+  (function(document) {
+  'use strict';
+
+  document.addEventListener('core-select', function(e) {
+    var tabs = document.querySelector('#tabs');
+    var sorts = ['', '', '']
+    var leaderboard = document.querySelector('#leaderboard');
+    if (e.detail.isSelected){
+      var s = ['Cumulative', 'World', 'Raw'][tabs.selected] 
+      console.log('SELECT ' + s);
+      leaderboard.sorting = s
+    }
+  });
+
+  // wrap document so it plays nice with other libraries
+  // http://www.polymer-project.org/platform/shadow-dom.html#wrappers
+  })(wrap(document));
+
+
+  </script>
 
 </head>
 
-
 <body unresolved>
 
+  <gz-register id="register"></gz-register>
 
   <div class="hero-unit">
 
-    <gz-register id="register"></gz-register>
+    <paper-tabs id='tabs' selected=0>
+       <paper-tab>Cumulative</paper-tab>
+       <paper-tab>By world</paper-tab>
+       <paper-tab>Raw</paper-tab>
+    </paper-tabs>
+
     <gz-leaders id="leaderboard"></gz-leaders>
-
-<!--
-    <input type="text" placeholder="user name"/>
-    <a href="/register">Register</a>
-    <a href="/unregister">Unregister</a>
--->
-
-
-
-<!--
-    <yo-greeting></yo-greeting>
-    <p>You now have</p>
-    <yo-list></yo-list>
--->
-
 
   </div>
 

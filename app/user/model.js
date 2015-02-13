@@ -4,10 +4,16 @@ var redis = require("redis").createClient();
 
 var exports = module.exports = {};
 
+
+redis.on("error", function (err) {
+        console.log("Error " + err);
+    });
+
+
 exports.getByName = function(username, cb) {
     
     console.log('user.getByName');
-
+    
 // database error
 //    console.log(util.inspect(db));
 //    cb('Database error');    
@@ -25,6 +31,7 @@ exports.getByName = function(username, cb) {
 
 exports.add = function (username, password, cb) {
     console.log('add user ' + username)
+    
     cb(null, {});    
 }
 

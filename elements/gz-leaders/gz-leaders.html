@@ -35,6 +35,12 @@ users, worlds, sim_events
     <script>
     Polymer({
         response: null,
+        sorting: "Cumulative",
+        sortingChanged: function() {
+            console.log('SORTING CHANGED to ' + this.sorting)
+            console.log(this.response)
+        }
+      
     });
     </script>
 

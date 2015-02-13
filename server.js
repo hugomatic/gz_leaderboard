@@ -1,3 +1,5 @@
+"use strict"
+
 var fs = require('fs')
 var https = require('https')
 var privateKey  = fs.readFileSync('key.pem', 'utf8')
@@ -63,7 +65,7 @@ passport.use(new BasicStrategy({
 ));
 */
 
-all_events = [];
+let all_events = [];
 
 // curl -v -I http://127.0.0.1:3000/
 // curl -v -I --user bob:secret http://127.0.0.1:3000/
@@ -103,6 +105,7 @@ app.post('/events/new',
   });
 
 app.use(serveStatic(__dirname ));
+
 
 console.log('Listening on port 3000');
 //httpServer.listen(80);
