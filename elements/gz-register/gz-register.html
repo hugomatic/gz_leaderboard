@@ -116,7 +116,7 @@
                 alert("Password can't be empty");
                 return;
             }
-            // user already exists
+            
             var x = post("/register", {"user":user, "password": pass}, function(err, res){
                     console.log(res);
                     if(err) {
@@ -131,7 +131,7 @@
                     }
                     else
                     {
-                        alert(j.error);
+                        alert('xxx' + res);
                     }
                 });
             },

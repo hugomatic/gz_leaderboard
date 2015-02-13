@@ -33,21 +33,26 @@ exports.register = function(req, res)
         if (err)
         {
             res.jsonp({"success": false, "error": err});
+            return
         }
         if(user)
         {
             var e = "User \"" + username  + "\" already exists";
             console.log(e);
             res.jsonp({ "success": false, "error": e});
+            return;
         }
         else // the user does not exist
         {
-            User.add( user, req.body.password, function(err, user){
+            User.add( username, req.body.password, function(err, user){
                 if(err)
                 {
+                    console.error('User add error: ' + err)
                     res.jsonp({"success": false, "error": err});
+                    return
                 }
-                res.jsonp({"success": true, "user":user });
+                res.jsonp({"success": true, "user": user.username });
+                return
             });
         }
    });
@@ -73,7 +78,7 @@ exports.unregister = function(req, res) {
         {
             User.remove( user, req.body.password, function(err, user){
                 if(err) return next(err);
-                res.jsonp({"success": true, "user":user });
+                res.jsonp({'success': true, 'username': user.username,  'id': user.id});
             });
         }
     });
