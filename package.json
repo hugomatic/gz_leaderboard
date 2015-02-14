@@ -5,9 +5,10 @@
   "main": "exp_server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node --es_staging server.js"
+    "start": "node --es_staging server.js",
+    "jshint": "./node_modules/.bin/jshint server.js app elements scripts"
   },
-  "author": "",
+  "author": "Hugo Boyer",
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.4.3",
@@ -17,5 +18,12 @@
     "passport-http": "^0.2.2",
     "redis": "^0.12.1",
     "serve-static": "^1.7.1"
+  },
+  "jshintConfig": {
+    "indent": 2,
+    "asi": true,
+    "esnext": true,
+    "node": true
   }
+
 }

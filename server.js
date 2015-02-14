@@ -108,6 +108,7 @@ app.use(serveStatic(__dirname ));
 
 
 console.log('Listening on port 3000');
+
 //httpServer.listen(80);
 //httpsServer.listen(443);
 httpsServer.listen(3000);

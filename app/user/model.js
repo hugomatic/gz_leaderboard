@@ -1,4 +1,5 @@
 'use strict'
+/*jshint asi: true*/
 
 //
 // [key / value] pairs for the database
@@ -14,8 +15,19 @@ var redis = require("redis").createClient();
 
 var exports = module.exports = {};
 
+
 let DB = 'leaderboard'
 let usermap = DB + '/usermap'
+
+function getUserPath(id) {
+  let s = DB + '/users/' + id
+  return s
+}
+
+function getEventsPath(id) {
+  let s = DB + '/events/' + id
+  return s
+}
 
 redis.on("error", function (err) {
         console.log("Error " + err);
@@ -30,16 +42,15 @@ exports.getByName = function(username, cb) {
       return
     }
     if(user) {
-      console.log('xx user found ' + user)
       cb(null, user)
     }
     else {
-      console.log('xx user ' + username + ' not found')
       cb(null)
-    }
-    
+    } 
   })
 }
+
+
 
 exports.add = function (username, password, cb) {
   console.log('[add user] ' + username)
@@ -51,7 +62,7 @@ exports.add = function (username, password, cb) {
         return
       }
       let juser = {'username': username, 'password': password, 'id':id }
-      redis.set(DB + '/users/' + id, JSON.stringify(juser), function (err) {
+      redis.set(getUserPath(id), JSON.stringify(juser), function (err) {
         if(err) {
           console.log('error adding user ' + err);
           cb(err)
@@ -63,9 +74,38 @@ exports.add = function (username, password, cb) {
   }); 
 }
 
-exports.remove = function (username, password, cb) {
-    console.log('remove user ' + username)
-    cb(null, {});
+exports.remove = function (username, cb) {
+  console.log('[remove user] ' + username)
+  // remove username from the user map
+  redis.hdel(usermap, username, function(err, userId) {
+    if (err) {
+      console.log(usermap + ' [hdel error]: ' + err) 
+      cb(err)
+      return
+    }
+    // remove user data (password)
+    let uPath =getUserPath(userId)
+    console.log('remove user data ' + uPath)
+    redis.del(uPath, function(err, userData) {
+      if (err) {
+        console.log(uPath + ' [del] error: ' + err)
+        cb(err)
+        return
+      }
+      let ePath = getEventsPath(userId)
+      console.log('remove user events ' + ePath)
+      redis.del(ePath, function(err, events) {
+        if(err) {
+          console.log( ePath + ' [del] err: ' + err)
+          cb(err)
+          return
+        }
+        // success
+        console.log('remove success ' + userData + ' events: ' + events)
+        cb(null, {username: username, id: userId} )
+      })      
+    })
+  })
 }
 
 

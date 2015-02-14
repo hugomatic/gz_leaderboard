@@ -1,3 +1,6 @@
+'use strict'
+/*jshint asi: true*/
+
 var util = require('util')
 var User = require('./model')
 
@@ -27,7 +30,7 @@ exports.register = function(req, res)
 {
     var data = util.inspect(req.body);
     console.log("Register " + data);
-    var username = req.body['user']
+    var username = req.body.user
     User.getByName(username, function(err, user){
 
         if (err)
@@ -61,9 +64,8 @@ exports.register = function(req, res)
 exports.unregister = function(req, res) {
     var data = util.inspect(req.body);
     console.log("unregister " + data);
-    var username = req.body['user']
+    var username = req.body.user
     User.getByName(username, function(err, user) {
-        console.log("XXUSER" + user)
         if (err)
         {
             res.jsonp({"success": false, "error": err});
@@ -74,11 +76,16 @@ exports.unregister = function(req, res) {
             console.log(e);
             res.jsonp({ "success": false, "error": e});
         }
-        else // the user does not exist
+        else // the user exists
         {
-            User.remove( user, req.body.password, function(err, user){
-                if(err) return next(err);
-                res.jsonp({'success': true, 'username': user.username,  'id': user.id});
+            // check password
+            
+            User.remove( username, function(err, user){
+                if(err) {
+                  res.jsonp({success: false, error: err})
+                  return
+                }
+                res.jsonp({'success': true, 'username': user.username,  'id': user.id})
             });
         }
     });
