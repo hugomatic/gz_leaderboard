@@ -12,16 +12,24 @@ var exports = module.exports = {};
 //   with a user object.
 exports.verify = function(username, password, done)
 {
+    console.log('verify ' + username + ' ' + password);
     process.nextTick(function () {
       
         // Find the user by username.  If there is no user with the given
         // username, or the password is not correct, set the user to `false` to
         // indicate failure.  Otherwise, return the authenticated `user`.
         User.getByName(username, function(err, user) {
-            if (err) { return done(err); }
-            if (!user) { return done(null, false); }
-            if (user.password != password) { return done(null, false); }
-            return done(null, user);
+            if (err) {
+              return done(err);
+            }
+            if (!user) {
+              return done(null, false)
+            }
+            if (user.password != password)
+            {
+              return done(null, false)
+            }
+            return done(null, user)
         })
     })
 }
@@ -47,7 +55,8 @@ exports.register = function(req, res)
         }
         else // the user does not exist
         {
-            User.add( username, req.body.password, function(err, user){
+            let role = 'user'
+            User.add( username, req.body.password, role, function(err, user){
                 if(err)
                 {
                     console.error('User add error: ' + err)
@@ -62,9 +71,10 @@ exports.register = function(req, res)
 }
 
 exports.unregister = function(req, res) {
-    var data = util.inspect(req.body);
-    console.log("unregister " + data);
-    var username = req.body.user
+    let data = util.inspect(req.body)
+    console.log("unregister " + data)
+    let username = req.body.user
+    let password = req.body.password
     User.getByName(username, function(err, user) {
         if (err)
         {
@@ -79,8 +89,12 @@ exports.unregister = function(req, res) {
         else // the user exists
         {
             // check password
-            
-            User.remove( username, function(err, user){
+            if (user.password !== password)
+            {
+              res.jsonp({success: false, error: 'Incorrect password for user ' + username})
+              return
+            }
+            User.remove( username, user.id, function(err, user){
                 if(err) {
                   res.jsonp({success: false, error: err})
                   return

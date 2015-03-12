@@ -13,8 +13,13 @@ var util = require('util')
 var serveStatic = require('serve-static')
 var config = require('./config.json')
 
+let ConnectRoles = require('connect-roles')
+
 // custom models
-var User = require('./app/user/routes');
+let UserRoutes = require('./app/user/routes')
+let UserDb = require('./app/user/model')
+let Events = require('./app/events/model')
+
 
 var app = express();
 
@@ -22,90 +27,119 @@ var app = express();
 // var httpServer = http.createServer(app);
 var httpsServer = https.createServer(credentials, app);
 
+
+var user = new ConnectRoles({
+  failureHandler: function (req, res, action) {
+    // optional function to customise code that runs when
+    // user fails authorisation
+    var accept = req.headers.accept || '';
+    res.status(403);
+    //if (~accept.indexOf('html')) {
+    //  res.render('access-denied', {action: action});
+    //} else {
+      res.send('Access Denied - You don\'t have permission to ' + action);
+    }
+})
+
+
+
 app.use(passport.initialize());
+
+
+// roles
+
+//returning false stops any more rules from being
+user.use('access admin page', function (req, res) {
+  console.log('access admin page for: ' + util.inspect(req.user))
+  console.log
+  if (req.user.role === 'admin') {
+    return true;
+  }
+})
+
+
 // parse application/json
 app.use(bodyParser.json())
-
-
-function findByUsername(username, fn) {
-  var users = config.users;
-  for (var i = 0, len = users.length; i < len; i++) {
-    var user = users[i];
-    if (user.username === username) {
-      return fn(null, user);
-    }
-  }
-  return fn(null, null);
-}
 
 // Use the BasicStrategy within Passport.
 //   Strategies in Passport require a `verify` function, which accept
 //   credentials (in this case, a username and password), and invoke a callback
 //   with a user object.
-passport.use(new BasicStrategy({}, User.verify ));
+passport.use(new BasicStrategy({}, UserRoutes.verify ));
 
-/*
-passport.use(new BasicStrategy({
-  },
-  function(username, password, done) {
-    // asynchronous verification, for effect...
-    process.nextTick(function () {
-      
-      // Find the user by username.  If there is no user with the given
-      // username, or the password is not correct, set the user to `false` to
-      // indicate failure.  Otherwise, return the authenticated `user`.
-      findByUsername(username, function(err, user) {
-        if (err) { return done(err); }
-        if (!user) { return done(null, false); }
-        if (user.password != password) { return done(null, false); }
-        return done(null, user);
-      })
-    });
-  }
-));
-*/
+app.use(user.middleware());
 
-let all_events = [];
+
+// basic autoh configuration
+let basicConfig = {session: false}
+
+app.get('/admin', 
+        passport.authenticate('basic', basicConfig),
+        user.can('access admin page'),
+        function (req,res) {
+          res.end('<h1>Admin page</h1>');
+})
 
 // curl -v -I http://127.0.0.1:3000/
 // curl -v -I --user bob:secret http://127.0.0.1:3000/
 app.get('/login', 
-   passport.authenticate('basic', { session: false }),
-   function(req, res){
-     console.log("-----\nLogin:" + util.inspect(req.user));
-     all_events.push(req.user);    
-     res.jsonp( req.user );
-     console.log('LOGIN DONE');
-  });
+  passport.authenticate('basic', basicConfig),
+  function(req, res){
+    console.log("\nGET /login: " + util.inspect(req.user))
+    // avoid transmitting password over the wire 
+    delete req.user.password
+    console.log('done')
+    res.jsonp( req.user )
+  }
+);
 
 
-app.post('/register', User.register)
-app.post('/unregister', User.unregister) 
+app.get('/logout', function(req, res){
+  req.logout()
+  res.statusCode = 401
+  res.redirect('/')
+});
+
+app.post('/register', UserRoutes.register)
+app.post('/unregister', UserRoutes.unregister) 
 
 
 app.get('/api/db', function (req, res) {
-   console.log('GET /api/db');
- 
-   var db = config;
-   res.jsonp(db);
-
+  console.log('GET /api/db');
+  Events.getAll(function(err, events) {
+    if(err) {
+      throw err
+    }
+    let db = {events : events}
+    res.jsonp(db);
+  })
 });
 
 app.get('/api/register', function (req, res) {
    console.log('register ' + util.inspect(req.query)  );
-
 });
 
 app.post('/events/new', 
-  passport.authenticate('basic', { session: false }),
-  function(req, res){
-   console.log("-----\nNEW EVENT:\n\n" + util.inspect(req.body));
-   all_events.push(req.body);    
-   res.jsonp({ username: req.user.username, email: req.user.email, Event: req.body });
-  });
+  passport.authenticate('basic', basicConfig),
+    function(req, res){
+      console.log('req.user: ' + util.inspect(req.user))
+      console.log("\nNEW EVENT:\n\n" + util.inspect(req.body))
+      let eventData = req.body
+      // all_events.push(req.body);
+      let eventDb = {username: req.user.username,
+                     Event: eventData }
+
+      Events.add(eventDb, function(err) {
+        if(err) {
+          throw err;
+        }
+        res.jsonp(eventDb)
+
+      })
+    })
+
 
 app.use(serveStatic(__dirname ));
-
 
 console.log('Listening on port 3000');
 

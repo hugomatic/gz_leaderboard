@@ -1,5 +1,4 @@
 'use strict'
-/*jshint asi: true*/
 
 //
 // [key / value] pairs for the database
@@ -36,24 +35,40 @@ redis.on("error", function (err) {
 exports.getByName = function(username, cb) {
    
   console.log('user.getByName');
-  redis.hget(usermap, username, function (err, user) {
+  redis.hget(usermap, username, function (err, userId) {
     if(err) {
       console.log(usermap + ' error: ' + err)
-      return
+      cb(err)
     }
-    if(user) {
-      cb(null, user)
+    if(!userId) {
+      console.log(username + ' Not found')
+      cb(null)
     }
     else {
-      cb(null)
-    } 
+      console.log('Found: ' + userId)
+      let uPath = getUserPath(userId)
+      redis.get(uPath, function(err, user) {
+        if(err) {
+          console.log(uPath + ' error: ' + err)
+          cb(err)
+        }
+        if(!user) {
+          let e = 'can\'t locate user data: ' + uPath
+          console.log('error: ' + e)
+          cb(e)
+        }
+        else {
+          console.log(username + ' verified')
+          cb(null, JSON.parse(user))
+        }
+      })
+    }
   })
 }
 
 
-
-exports.add = function (username, password, cb) {
-  console.log('[add user] ' + username)
+exports.add = function (username, password, role, cb) {
+  console.log('[add user] ' + username + ', role: ' + role )
   redis.incr(DB + '/user_count', function (err, id) {
     redis.hmset( usermap, username, id, function (err) {
       if(err) {
@@ -61,32 +76,37 @@ exports.add = function (username, password, cb) {
         cb(err)
         return
       }
-      let juser = {'username': username, 'password': password, 'id':id }
+      let juser = {'username': username,
+                   'password': password,
+                   'role': role, 'id':id }
       redis.set(getUserPath(id), JSON.stringify(juser), function (err) {
         if(err) {
           console.log('error adding user ' + err);
           cb(err)
           return
         }
-        cb(null, {username: username, id: id})
+        cb(null, {'username': username, 'role': role, 'id': id})
       });
     });
   }); 
 }
 
-exports.remove = function (username, cb) {
+
+// this function requires the name and id, and
+// it does not check for correct password
+exports.remove = function (username, userId, cb) {
+
   console.log('[remove user] ' + username)
   // remove username from the user map
-  redis.hdel(usermap, username, function(err, userId) {
+  redis.hdel(usermap, username, function(err) {
     if (err) {
       console.log(usermap + ' [hdel error]: ' + err) 
       cb(err)
       return
     }
-    // remove user data (password)
     let uPath =getUserPath(userId)
     console.log('remove user data ' + uPath)
-    redis.del(uPath, function(err, userData) {
+    redis.del(uPath, function(err) {
       if (err) {
         console.log(uPath + ' [del] error: ' + err)
         cb(err)
@@ -94,14 +114,14 @@ exports.remove = function (username, cb) {
       }
       let ePath = getEventsPath(userId)
       console.log('remove user events ' + ePath)
-      redis.del(ePath, function(err, events) {
+      redis.del(ePath, function(err) {
         if(err) {
           console.log( ePath + ' [del] err: ' + err)
           cb(err)
           return
         }
         // success
-        console.log('remove success ' + userData + ' events: ' + events)
+        console.log('remove done')
         cb(null, {username: username, id: userId} )
       })      
     })

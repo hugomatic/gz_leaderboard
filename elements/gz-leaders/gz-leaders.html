@@ -22,12 +22,38 @@
             params='{}'
             handleAs="json" response="{{response}}"></core-ajax>
 <!--
-users, worlds, sim_events
-{"id": 1, "user_id":1, "world_id": 1, "event": {"name":"start", "time": "21:00:00"}
+
+  {
+    "username":"hugo",
+    "Event":{
+        "session":"b477fedb-9f6e-42c3-a42d-0bde6e080a4e",
+        "name":"Can1_in_0_0",
+        "type":"region",
+        "data":{
+            "state":"inside",
+            "region":"start",
+            "model":"can1"},
+         "world":{
+             "name":"default",
+             "paused":"false",
+             "clock_time":"2015-03-12T11:18:32.474003",
+             "real_time":"00 00:00:00.002",
+             "sim_time":"00 00:00:00.001",
+             "pause_time":"00 00:00:00.000"
+          }
+       }
+   }"
+
 -->
-        <template repeat="{{e in response.sim_events}}">
+        <script>
+            console.log('XXX STAMP XXX');
+        </script>
+        <template repeat="{{e in response.events}}">
             <div>
-                id: {{e.id}}, user: {{e.user_id}}, world:{{e.world_id}}, event: {{e.event.name}}
+                user: {{e.username}}<br>
+                {{e.Event.name}} ({{e.Event.type}})<br>
+                {{data(e)}}<br>
+                ------------------<br>
             </div>
         </template>
     </template>
@@ -35,12 +61,15 @@ users, worlds, sim_events
     <script>
     Polymer({
         response: null,
+        data: function(e)
+        {
+            return JSON.stringify(e.Event.data)
+        },
         sorting: "Cumulative",
         sortingChanged: function() {
             console.log('SORTING CHANGED to ' + this.sorting)
             console.log(this.response)
         }
-      
     });
     </script>
 
