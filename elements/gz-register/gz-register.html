@@ -15,18 +15,13 @@
         <input id="pass1" type="password" placeholder="password"/><br>
         <input id="pass2" type="password" placeholder="confirm password"/><br>
         <button on-click="{{registerUser}}" >Register</button>
-
-
     </div>
 
     <div id="div_rem_user" style="display:none">
         <input id="ruser"  type="text" placeholder="user name"/><br>
         <input id="rpass" type="password" placeholder="password"/><br>
         <button on-click="{{unregisterUser}}" >Unregister</button>
-<!--    <button on-click="{{hideRem}}" >Hide</button> -->
     </div>
-
-
   </template>
  
   <script>
@@ -52,6 +47,7 @@
                 if(xmlhttp.status == 509) cb("Bandwidth Limit Exceeded (Apache bw/limited extension)");
                 if(xmlhttp.status == 510) cb("Further extensions to the request are required for the server to fulfil it.");
                 if(xmlhttp.status == 511) cb("Network Authentication Required");
+
                 if(xmlhttp.status >= 200 && xmlhttp.status < 300) {
                     var r = xmlhttp.responseText;
                     cb(null, r)

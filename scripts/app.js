@@ -3,7 +3,10 @@
 
   document.addEventListener('polymer-ready', function() {
     // Perform some behaviour
-    console.log('Polymer is ready to rock!');
+    console.log('polymer-ready');
+    var tmpl = document.querySelector("#tmpl");
+    tmpl.title = "Simulation leaderboard";
+    tmpl.selected = 0;
   });
 
 // wrap document so it plays nice with other libraries

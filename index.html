@@ -23,52 +23,86 @@
   <link rel="import" href="elements/elements.html">
   <!-- endbuild-->
 
-  <!--   -->
   <link rel="import" href="bower_components/paper-tabs/paper-tabs.html" >          
+  <link rel="import" href="bower_components/core-pages/core-pages.html" > 
 
-
-
-  <script>
-
-  (function(document) {
-  'use strict';
-
-  document.addEventListener('core-select', function(e) {
-    var tabs = document.querySelector('#tabs');
-    var sorts = ['', '', '']
-    var leaderboard = document.querySelector('#leaderboard');
-    if (e.detail.isSelected){
-      var s = ['Cumulative', 'World', 'Raw'][tabs.selected] 
-      console.log('SELECT ' + s);
-      leaderboard.sorting = s
+  <style shim-shadowdom>
+  
+    body {
+      font-family: RobotoDraft, 'Helvetica Neue', Helvetica, Arial;
+      margin: 0;
+      padding: 24px;
+      color: #333;
     }
-  });
+    
+    body.core-narrow {
+      padding: 8px;
+    }
+    
+    paper-tabs, core-toolbar {
+      background-color: #00bcd4;
+      color: #fff;
+      box-shadow: 0px 3px 2px rgba(0, 0, 0, 0.2);
+    }
+    
+    core-toolbar paper-tabs {
+      box-shadow: none;
+    }
+    
+    paper-tabs[noink][nobar] paper-tab.core-selected {
+      color: #ffff8d;
+    }
+    
+    paper-tabs.transparent-teal {
+      background-color: transparent;
+      color: #00bcd4;
+      box-shadow: none;
+    }
+    
+    paper-tabs.transparent-teal::shadow #selectionBar {
+      background-color: #00bcd4;
+    }
+    
+    paper-tabs.transparent-teal paper-tab::shadow #ink {
+      color: #00bcd4;
+    }
+    
+    h3 {
+      font-size: 16px;
+      font-weight: 400;
+    }
+    
+  </style>
 
-  // wrap document so it plays nice with other libraries
-  // http://www.polymer-project.org/platform/shadow-dom.html#wrappers
-  })(wrap(document));
-
-
-  </script>
 
 </head>
 
 <body unresolved>
-
+  <div align="right">
+    <a href="/admin">Admin</a>
+  </div>
   <gz-register id="register"></gz-register>
-<a href="/admin">Admin</a>
-
+  
   <div class="hero-unit">
-
-    <paper-tabs id='tabs' selected=0>
+    
+    <template is="auto-binding" id="tmpl">
+    <h1>{{title}}</h1>
+    <paper-tabs id='tabs' selected={{selected}}>
        <paper-tab>Cumulative</paper-tab>
        <paper-tab>By world</paper-tab>
        <paper-tab>Raw</paper-tab>
     </paper-tabs>
-
-    <gz-leaders id="leaderboard"></gz-leaders>
+    <core-pages id='pages' selected={{selected}}>
+      <div>cumul</div>
+      <div>world</div>
+      <div>
+        <gz-leaders id="leaderboard" ></gz-leaders>
+      </div>
+    </core-pages>
+    </template>
 
   </div>
+  
 
   <!-- build:js scripts/app.js -->
   <script src="scripts/app.js"></script>

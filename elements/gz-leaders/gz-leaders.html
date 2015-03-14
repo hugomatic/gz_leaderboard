@@ -1,16 +1,4 @@
 
-<!--
-
-    <core-ajax auto handleAs="json" url="{{url}}" response="{{categories}}"></core-ajax>
-
-    <core-ajax
-      auto
-      url="/api/db"
-      params='{"alt":"json", "q":"chrome"}'
-      handleAs="json"
-      on-core-response="{{handleResponse}}"></core-ajax>
-
--->
 
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="../../bower_components/core-ajax/core-ajax.html">
@@ -48,11 +36,17 @@
         <script>
             console.log('XXX STAMP XXX');
         </script>
+        <br>
+        <br>
+        <br>
         <template repeat="{{e in response.events}}">
             <div>
+                session: {{e.Event.session}}<br>
                 user: {{e.username}}<br>
-                {{e.Event.name}} ({{e.Event.type}})<br>
-                {{data(e)}}<br>
+                t: {{e.Event.world.sim_time}}<br>
+                event: {{e.Event.name}}<br>
+                type: ({{e.Event.type}})<br>
+                data: {{data(e)}}<br>
                 ------------------<br>
             </div>
         </template>
@@ -63,6 +57,7 @@
         response: null,
         data: function(e)
         {
+            console.log(e)
             return JSON.stringify(e.Event.data)
         },
         sorting: "Cumulative",
