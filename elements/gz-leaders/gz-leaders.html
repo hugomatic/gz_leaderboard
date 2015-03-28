@@ -3,69 +3,206 @@
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="../../bower_components/core-ajax/core-ajax.html">
 
-<polymer-element name="gz-leaders" attributes="">
+<polymer-element name="gz-leaders" attributes="sorting">
 
     <template>
-        <core-ajax auto url="/api/db"
+        <core-ajax auto url="/api/raw_posts"
             params='{}'
             handleAs="json" response="{{response}}"></core-ajax>
-<!--
 
-  {
-    "username":"hugo",
-    "Event":{
-        "session":"b477fedb-9f6e-42c3-a42d-0bde6e080a4e",
-        "name":"Can1_in_0_0",
-        "type":"region",
-        "data":{
-            "state":"inside",
-            "region":"start",
-            "model":"can1"},
-         "world":{
-             "name":"default",
-             "paused":"false",
-             "clock_time":"2015-03-12T11:18:32.474003",
-             "real_time":"00 00:00:00.002",
-             "sim_time":"00 00:00:00.001",
-             "pause_time":"00 00:00:00.000"
-          }
-       }
-   }"
-
--->
         <script>
-            console.log('XXX STAMP XXX');
+            console.log('gz_leaders');
         </script>
-        <br>
-        <br>
-        <br>
-        <template repeat="{{e in response.events}}">
-            <div>
-                session: {{e.Event.session}}<br>
-                user: {{e.username}}<br>
-                t: {{e.Event.world.sim_time}}<br>
-                event: {{e.Event.name}}<br>
-                type: ({{e.Event.type}})<br>
-                data: {{data(e)}}<br>
-                ------------------<br>
-            </div>
-        </template>
-    </template>
+          
+        <style type="text/css">
+        /*
+             yellow: #ffff8d;
+             teal: #00bcd4
+         */
 
+        .TFtable{
+            width:100%; 
+            border-collapse:collapse; 
+        }
+        .TFtable td{ 
+            /* padding:7px; border:#4e95f4 1px solid; */
+            padding:7px; border:#00bcd4 1px solid;
+        }
+        /* provide some minimal visual accomodation for IE8 and below */
+        .TFtable tr{
+            background: #b8d1f3;
+        }
+        /*  Define the background color for all the ODD background rows  */
+        .TFtable tr:nth-child(odd){ 
+            background: #b8d1f3;
+        }
+        /*  Define the background color for all the EVEN background rows  */
+        .TFtable tr:nth-child(even){
+            background: #dae5f4;
+        }
+        </style>
+
+    <table class="TFtable">
+
+        <template if={{show_by_leaders}} repeat="{{e in leaderboard}}" >
+            <tr><td>{{e.username}}</td><td><pre>{{rawData(e)}}</pre></td></tr>            
+        </template>
+
+        <template if={{show_by_worlds}} repeat="{{e in leaderworlds}}" >
+            <tr><td>{{e.world}}</td><td><pre>{{rawData(e)}}</pre></td></tr>            
+        </template>
+
+        <template if={{show_by_runs}} repeat="{{e in scores}}" >
+            <tr>
+                <td>{{e.username}}</td>
+                <td>{{e.world}}</td>
+                <td>{{e.points}}</td>
+                <td>{{e.duration}}</td>
+                <td>{{e.status}}</td>
+            </tr>
+        </template>
+
+        <template if={{show_raw}} repeat="{{e in response.events}}">
+            <tr><td>{{e.username}}</td><td><pre>{{rawData(e)}}</pre></td></tr>
+        </template>
+        
+    </table>
+
+    <table class="TFtable">
+
+    </table>
+
+</template>
     <script>
+    'use strict'
     Polymer({
-        response: null,
-        data: function(e)
+        sorting: "",  // controls the display
+
+        response: null,  // the raw ajax data
+        scores: [],
+        leaderboard: [],
+        leaderworlds: [],
+
+        show_by_leaders: true, 
+        show_by_worlds: false,
+        show_raw: false,
+        show_by_runs: false,
+
+        rawData: function(e)
         {
-            console.log(e)
-            return JSON.stringify(e.Event.data)
+            return JSON.stringify(e, null, '  ')
         },
-        sorting: "Cumulative",
+        // change notifications
         sortingChanged: function() {
-            console.log('SORTING CHANGED to ' + this.sorting)
-            console.log(this.response)
+            this.show_by_leaders = false
+            this.show_by_worlds = false
+            this.show_raw = false
+            this.show_by_runs = false
+            if(this.sorting === "leaders") this.show_by_leaders = true
+            if(this.sorting === "worlds") this.show_by_worlds = true
+            if(this.sorting === "raw") this.show_raw = true
+            if(this.sorting === "runs") this.show_by_runs = true
+        },
+        responseChanged: function() {
+            console.log('scoring runs')
+            let runs =[]
+            // this dictionary helps us retreive sessions
+            let sessionsDict = {}
+            // gather all events per session into runs
+            for (var i = 0; i < this.response.events.length; i++) {
+                let e = this.response.events[i]
+                let t = e.Event.world.clock_time
+                let d = new Date(t)
+                if(!sessionsDict[e.Event.session]) {
+                    // a new session. First event is the oldest
+                    let run = {events:[e.Event],
+                               username:e.username,
+                               world:e.Event.world.name,
+                               timestamp: d}
+                     sessionsDict[e.Event.session] = run
+                     // we then add the run into a list
+                     runs.push(run)
+                }
+                else {
+                    // run is already in the dict
+                    sessionsDict[e.Event.session].events.push(e.Event)
+                }
+            }
+            
+            // score each simulation run individually
+            // we're going to score each session, then
+            // organize them by world and username
+            // ** world / users / scores:
+            // 
+            this.scores = []
+            let worldDict = {}
+            for (var i=0; i < this.children.length; i++)
+            {
+              // children of the leaderboard are expected to
+              // have the addToLeaderboard function
+              var scoringModule = this.children[i]
+
+              for(var i=0; i < runs.length; i++)
+              {
+                  let run = runs[i]
+                  let world = run.world
+                  // chek if the component can score this world
+                  if (scoringModule.worlds.indexOf(world) < 0)
+                    continue;
+                  
+                  let score = { status: "Started",
+                                points : 0,
+                                duration : 0,
+                              }
+                  // score each run
+                  scoringModule.scoreRun(run.events, score)
+                  // add some usefull data
+                  score.world = world
+                  score.username = run.username  
+                  score.startDate = new Date(run.events[0].world.clock_time)
+                  // put it in the list
+                  this.scores.push(score)
+              }
+              console.log(this.scores, this.scores.length + ' SCORED simulation runs')
+            }
+
+            for(var i=0; i < this.scores.length; i++) {
+                let score = this.scores[i]
+                // add the scored run to the world map
+                if (!worldDict[score.world]) {
+                    worldDict[score.world] = {}
+                }
+
+                // the worldDict has dicts for each user
+                if(!worldDict[score.world][score.username]) {
+                    worldDict[score.world][score.username] = {best: score, latest: score, all:[]}
+                }
+                worldDict[score.world][score.username].all.push(score)
+                // is this the best?
+                if (worldDict[score.world][score.username].points < score.points )
+                    worldDict[score.world][score.username].best = score
+                // is this the latest?
+                if (worldDict[score.world][score.username].points < score.points )
+                    worldDict[score.world][score.username].latest = score
+            }
+
+             // the best of 
+            this.leaderworlds = []           
+            for (let world in worldDict) {
+                console.log(worldDict[world], 'world "' + world + '"' )
+                for (let user in worldDict[world]) {
+                    console.log('user ' + user)
+                    let bestScore = worldDict[world][user]
+                    let leader = {user: user, score: bestScore.points, duration: bestScore.duration}
+                    this.leaderworlds.push(leader)
+                }
+            }
+            // the leaders for each world are in, but they are not sorted yet
+
+
+            
+
         }
     });
     </script>
-
 </polymer-element>

@@ -87,22 +87,25 @@
     
     <template is="auto-binding" id="tmpl">
     <h1>{{title}}</h1>
-    <paper-tabs id='tabs' selected={{selected}}>
-       <paper-tab>Cumulative</paper-tab>
-       <paper-tab>By world</paper-tab>
-       <paper-tab>Raw</paper-tab>
+  
+    <paper-tabs id='tabs' selected={{selected}} valueattr="sort">
+       <paper-tab sort="leaders">Leaderboard</paper-tab>
+       <paper-tab sort="worlds">World by world</paper-tab>
+       <paper-tab sort="runs">Runs</paper-tab>
+       <paper-tab sort="raw">Raw</paper-tab>
     </paper-tabs>
-    <core-pages id='pages' selected={{selected}}>
-      <div>cumul</div>
-      <div>world</div>
-      <div>
-        <gz-leaders id="leaderboard" ></gz-leaders>
-      </div>
-    </core-pages>
+   
+    <gz-leaders id="leaderboard" sorting={{selected}} >
+      <gz-scoring_tow timeOutSec="30"/>
+    </gz-leaders>
+  
     </template>
 
   </div>
   
+  <script>
+
+  </script>
 
   <!-- build:js scripts/app.js -->
   <script src="scripts/app.js"></script>

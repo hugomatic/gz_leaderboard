@@ -12,15 +12,14 @@ var express = require('express')
 var util = require('util')
 var serveStatic = require('serve-static')
 var config = require('./config.json')
-
-let ConnectRoles = require('connect-roles')
+var ConnectRoles = require('connect-roles')
 
 // custom models
 let UserRoutes = require('./app/user/routes')
 let UserDb = require('./app/user/model')
 let Events = require('./app/events/model')
 
-
+// scoring plugins
 var app = express();
 
 // your express configuration here
@@ -104,8 +103,8 @@ app.post('/register', UserRoutes.register)
 app.post('/unregister', UserRoutes.unregister) 
 
 
-app.get('/api/db', function (req, res) {
-  console.log('GET /api/db');
+app.get('/api/raw_posts', function (req, res) {
+  console.log('GET /api/raw_posts');
   Events.getAll(function(err, events) {
     if(err) {
       throw err
@@ -114,6 +113,7 @@ app.get('/api/db', function (req, res) {
     res.jsonp(db);
   })
 });
+
 
 app.get('/api/register', function (req, res) {
    console.log('register ' + util.inspect(req.query)  );

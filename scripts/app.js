@@ -6,7 +6,7 @@
     console.log('polymer-ready');
     var tmpl = document.querySelector("#tmpl");
     tmpl.title = "Simulation leaderboard";
-    tmpl.selected = 0;
+    tmpl.selected = "leaders";
   });
 
 // wrap document so it plays nice with other libraries
