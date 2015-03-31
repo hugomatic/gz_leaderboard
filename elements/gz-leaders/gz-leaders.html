@@ -26,11 +26,14 @@
         }
         .TFtable td{ 
             /* padding:7px; border:#4e95f4 1px solid; */
-            padding:7px; border:#00bcd4 1px solid;
+            padding:7px;
+            border:#00bcd4 1px solid;
         }
-        /* provide some minimal visual accomodation for IE8 and below */
-        .TFtable tr{
-            background: #b8d1f3;
+        .TFtable th{ 
+            /* padding:7px; border:#4e95f4 1px solid; */
+            padding:7px; border:#00bcd4 1px solid;
+            background: #b8d1f3; /* #00bcd4; */
+            color: white;
         }
         /*  Define the background color for all the ODD background rows  */
         .TFtable tr:nth-child(odd){ 
@@ -44,28 +47,86 @@
 
     <table class="TFtable">
 
-        <template if={{show_by_leaders}} repeat="{{e in leaderboard}}" >
-            <tr><td>{{e.username}}</td><td><pre>{{rawData(e)}}</pre></td></tr>            
-        </template>
+        <br>
 
-        <template if={{show_by_worlds}} repeat="{{e in leaderworlds}}" >
-            <tr><td>{{e.world}}</td><td><pre>{{rawData(e)}}</pre></td></tr>            
-        </template>
+        <template if={{show_by_leaders}} >
 
-        <template if={{show_by_runs}} repeat="{{e in scores}}" >
             <tr>
-                <td>{{e.username}}</td>
-                <td>{{e.world}}</td>
-                <td>{{e.points}}</td>
-                <td>{{e.duration}}</td>
-                <td>{{e.status}}</td>
+                <th>User</th>
+                <th>Events</th>
+                <th>Points</th>
             </tr>
-        </template>
 
-        <template if={{show_raw}} repeat="{{e in response.events}}">
-            <tr><td>{{e.username}}</td><td><pre>{{rawData(e)}}</pre></td></tr>
+            <template repeat="{{e in leaderboard}}" >
+                <tr>
+                    <td>{{e.username}}</td>
+                    <td>{{e.events}}</td>
+                    <td>{{e.score}}</td>
+                </tr>
+            </template>
+
+<!--
+
+            <template repeat="{{e in leaderboard}}" >
+                <tr>
+                    <td>{{e.username}}</td>
+                    <td>{{e.events}}</td>
+                    <td><pre>{{rawData(e)}}</pre></td>
+                </tr>
+            <template>
+--> 
+
         </template>
         
+
+        <template if={{show_by_worlds}} >
+            <tr>
+                <th>World</th>
+                <th>User</th>
+                <th>Points</th>
+                <th>Duration</th>
+                <th>Status</th>
+            </tr>
+            <template repeat="{{e in leaderworlds}}" >
+                <tr>
+                    <td>{{e.world}}</td>
+                    <td>{{e.username}}</td>
+                    <td>{{e.points}}</td>
+                    <td>{{e.duration}}</td>
+                    <td>{{e.status}}</td>
+                </tr>
+            </template>
+        </template>
+
+        <template if={{show_by_runs}} >
+            <tr>
+                <th>User</th>
+                <th>World</th>
+                <th>Points</th>
+                <th>Duration</th>
+                <th>Status</th>
+            </tr>
+
+            <template repeat="{{e in scores}}" >
+                <tr>
+                    <td>{{e.username}}</td>
+                    <td>{{e.world}}</td>
+                    <td>{{e.points}}</td>
+                    <td>{{e.duration}}</td>
+                    <td>{{e.status}}</td>
+                </tr>
+            </template>
+        </template>
+
+        <template if={{show_raw}} >
+            <tr>
+                <th>User</th>
+                <th>JSON event data</th>
+            </tr>
+            <template repeat="{{e in response.events}}">
+                <tr><td>{{e.username}}</td><td><pre>{{rawData(e)}}</pre></td></tr>
+            </template>
+        </template>
     </table>
 
     <table class="TFtable">
@@ -75,6 +136,9 @@
 </template>
     <script>
     'use strict'
+    // a function to sort scored runs according to score
+    
+
     Polymer({
         sorting: "",  // controls the display
 
@@ -88,6 +152,11 @@
         show_raw: false,
         show_by_runs: false,
 
+        xxx : function(e) {
+           let s = JSON.stringify(e, null, '  ')
+           console.log(e, ' xxx')
+           return ''
+        },
         rawData: function(e)
         {
             return JSON.stringify(e, null, '  ')
@@ -186,22 +255,67 @@
                     worldDict[score.world][score.username].latest = score
             }
 
-             // the best of 
-            this.leaderworlds = []           
+             // the best of each world
+            console.log('world leaders')
+            this.leaderworlds = []
             for (let world in worldDict) {
                 console.log(worldDict[world], 'world "' + world + '"' )
                 for (let user in worldDict[world]) {
                     console.log('user ' + user)
-                    let bestScore = worldDict[world][user]
-                    let leader = {user: user, score: bestScore.points, duration: bestScore.duration}
-                    this.leaderworlds.push(leader)
+                    this.leaderworlds.push(worldDict[world][user].best)
+                    // let bestScore = worldDict[world][user].best
+                    // let leader = {user: user, score: bestScore.points, duration: bestScore.duration}
+                    // this.leaderworlds.push(leader)
                 }
             }
             // the leaders for each world are in, but they are not sorted yet
+            this.leaderworlds.sort(function(a, b) {
+                let r = a.world.localeCompare(b.world)
+                if( r == 0 ) {
+                    r = a.score - b.score
+                }
+                return r
+            })
 
+            let userDict = {}
+            // user / world / [best score]
+            for (let i=0; i < this.scores.length;  i++) {
+                let score = this.scores[i]
+                let user = score.username
+                let world = score.world
 
-            
+                console.log('SSSSSS ',score.points)
+                
+                if (!userDict[user]) {
+                    userDict[user]  = {}
+                }
+                if (!userDict[user][world]) {
+                    userDict[user][world] = score.points
+                }
+                // check if it is the best
+                if (score.points > userDict[user][world])
+                    userDict[user][world] = score.points
+                console.log('IN ad world: ', userDict[user][world] )
+            }
 
+            this.leaderboard = []
+            for(let username in userDict) {
+                let events = 0
+                let points = 0
+                for (let world in userDict[username]) {
+                    points += userDict[username][world]
+                    events += 1
+                }
+                this.leaderboard.push({ username : username,
+                                        score : points,
+                                        events : events })
+            }
+
+            this.leaderboard.sort(function(a, b) {
+                let r = a.score - b.score
+                return r        
+            })
+            console.log("ze leaderboard: ", this.leaderboard)
         }
     });
     </script>
