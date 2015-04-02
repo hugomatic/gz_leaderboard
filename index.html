@@ -78,25 +78,33 @@
 </head>
 
 <body unresolved>
-  <div align="right">
+
+<!--  <div align="right">
     <a href="/admin">Admin</a>
   </div>
+-->
+
   <gz-register id="register"></gz-register>
   
+  <div><br><button onclick="alert('todo!')">Clear data</button></div>
+
   <div class="hero-unit">
     
     <template is="auto-binding" id="tmpl">
-    <h1>{{title}}</h1>
-  
+
     <paper-tabs id='tabs' selected={{selected}} valueattr="sort">
        <paper-tab sort="leaders">Leaderboard</paper-tab>
        <paper-tab sort="worlds">World by world</paper-tab>
-       <paper-tab sort="runs">Runs</paper-tab>
+       <paper-tab sort="latest">Latest runs</paper-tab>
+       <paper-tab sort="runs">All runs</paper-tab>
        <paper-tab sort="raw">Raw</paper-tab>
     </paper-tabs>
+
+    <h1>{{title}}</h1>
+  
    
     <gz-leaders id="leaderboard" sorting={{selected}} >
-      <gz-scoring_tow timeOutSec="30"/>
+      <gz-scoring_tow timeOutSec="300"/>
     </gz-leaders>
   
     </template>
@@ -104,7 +112,7 @@
   </div>
   
   <script>
-
+    
   </script>
 
   <!-- build:js scripts/app.js -->
